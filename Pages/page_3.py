@@ -1,17 +1,12 @@
 import streamlit as st
-import pandas as pd
 import plotly.express as px
+from Modules.load_db import cargar_datos, pd
+from Modules.text_process import normalizar_texto
 
 st.title("Análisis de estado o provincia de nacimiento")
 st.write("Visualiza la distribución porcentual por estado o provincia de nacimiento en la base de datos.")
 
 archivo = st.session_state.get('archivo_base', None)
-
-def cargar_datos(archivo):
-    if archivo.name.endswith("csv"):
-        return pd.read_csv(archivo)
-    else:
-        return pd.read_excel(archivo)
 
 if archivo is not None:
     try:
@@ -21,11 +16,14 @@ if archivo is not None:
             "estado de nacimiento", "provincia de nacimiento",
             "estado", "provincia"
         ]
-        col_estado = next((col for col in df.columns if col.lower() in posibles), None)
+        col_estado = next((col for col in df.columns if normalizar_texto(col) in posibles), None)
         if col_estado:
-            conteo = df[col_estado].value_counts(normalize=True) * 100
+            # Normalizar valores para agrupar equivalentes
+            df[col_estado + '_norm'] = df[col_estado].apply(normalizar_texto)
+            conteo = df[col_estado + '_norm'].value_counts(normalize=True) * 100
+            etiquetas = df.groupby(col_estado + '_norm')[col_estado].agg(lambda x: x.value_counts().idxmax())
             fig = px.pie(
-                names=conteo.index,
+                names=[etiquetas[n] for n in conteo.index],
                 values=conteo.values,
                 title="Distribución porcentual por estado o provincia de nacimiento",
                 hole=0.4
