@@ -1,17 +1,11 @@
 import streamlit as st
-import pandas as pd
+from Modules.load_db import cargar_datos,pd
 import plotly.express as px
 
 st.title("Análisis de género")
 st.write("Visualiza la distribución porcentual de género en la base de datos.")
 
 archivo = st.session_state.get('archivo_base', None)
-
-def cargar_datos(archivo):
-    if archivo.name.endswith("csv"):
-        return pd.read_csv(archivo)
-    else:
-        return pd.read_excel(archivo)
 
 if archivo is not None:
     try:
